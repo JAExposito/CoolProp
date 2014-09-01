@@ -182,8 +182,29 @@ if (COOLPROP_DEBIAN_PACKAGE)
     set_target_properties (${app_name} PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS} -DCOOLPROP_LIB")
     set_target_properties (${app_name} PROPERTIES VERSION ${COOLPROP_VERSION} SOVERSION ${COOLPROP_VERSION_MAJOR})
     add_dependencies (${app_name} generate_headers)
-    install (TARGETS ${app_name} DESTINATION "${CMAKE_INSTALL_PREFIX}/usr/lib")
-    install (FILES ${CMAKE_SOURCE_DIR}/include/CoolPropLib.h DESTINATION "${CMAKE_INSTALL_PREFIX}/usr/include")
+    install (TARGETS ${app_name} DESTINATION "lib")
+    install (FILES ${CMAKE_SOURCE_DIR}/include/CoolPropLib.h DESTINATION "include")
+
+    set(CPACK_PACKAGE_VERSION ${COOLPROP_VERSION_MAJOR}.${COOLPROP_VERSION_MINOR}.${COOLPROP_VERSION_PATCH})
+    set(CPACK_GENERATOR "DEB")
+    set(CPACK_DEBIAN_PACKAGE_NAME "coolprop")
+    set(CPACK_DEBIAN_PACKAGE_VERSION "5.0") 
+    set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "i386") 
+#    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libdl")
+    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Jorrit Wronski <jowr@mek.dtu.dk>") #required
+
+    set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Fluid properties for the masses
+ CoolProp is a C++ library that implements 
+  - Pure and pseudo-pure fluid equations of state and transport properties for over 100 components
+  - Mixture properties using high-accuracy Helmholtz energy formulations (or cubic EOS)
+  - Correlations of properties for approximately 100 incompressible fluids and brines
+  - Highest accuracy psychrometric routines")
+
+    set(CPACK_DEBIAN_PACKAGE_SECTION "science")
+    set(DEBIAN_PACKAGE_BUILDS_DEPENDS "debhelper (>> 5.0.0)")
+    set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "debian.src/postinst;")
+ 
+    include(CPack)
 endif()
 
 if (COOLPROP_32BIT_SHARED_LIBRARY_LINUX_MODULE OR COOLPROP_32BIT_SHARED_LIBRARY_LINUX)
