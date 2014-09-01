@@ -125,6 +125,20 @@ else()
   endif()
 endif()
 
+
+#######################################
+#          INTERDEPENDENCIES          #
+#-------------------------------------#
+# Some of the artifacts defined below #
+# have common code. This section is   #
+# an effort to reduce the amount of   #
+# duplicate cmake settings.           #
+#######################################
+set(COOLPROP_LIBRARY_HEADER "${CMAKE_SOURCE_DIR}/include/CoolPropLib.h" )
+set(COOLPROP_LIBRARY_SOURCE "${CMAKE_SOURCE_DIR}/src/CoolPropLib.cpp" )
+
+
+
 #######################################
 #         MAKE ARTIFACTS              #
 #-------------------------------------#
@@ -171,40 +185,6 @@ if (COOLPROP_64BIT_SHARED_LIBRARY_MODULE OR COOLPROP_64BIT_SHARED_LIBRARY)
     endif()
     install (TARGETS ${app_name} DESTINATION shared_library/${CMAKE_SYSTEM_NAME}/64bit)
     install (FILES ${CMAKE_SOURCE_DIR}/include/CoolPropLib.h DESTINATION shared_library)
-endif()
-
-if (COOLPROP_DEBIAN_PACKAGE)
-    if(!UNIX)
-      message(FATAL_ERROR "COOLPROP_DEBIAN_PACKAGE can only be used on linux host")
-    endif()
-    list(APPEND APP_SOURCES "${CMAKE_SOURCE_DIR}/src/CoolPropLib.cpp")
-    add_library(${app_name} SHARED ${APP_SOURCES})
-    set_target_properties (${app_name} PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS} -DCOOLPROP_LIB")
-    set_target_properties (${app_name} PROPERTIES VERSION ${COOLPROP_VERSION} SOVERSION ${COOLPROP_VERSION_MAJOR})
-    add_dependencies (${app_name} generate_headers)
-    install (TARGETS ${app_name} DESTINATION "lib")
-    install (FILES ${CMAKE_SOURCE_DIR}/include/CoolPropLib.h DESTINATION "include")
-
-    set(CPACK_PACKAGE_VERSION ${COOLPROP_VERSION_MAJOR}.${COOLPROP_VERSION_MINOR}.${COOLPROP_VERSION_PATCH})
-    set(CPACK_GENERATOR "DEB")
-    set(CPACK_DEBIAN_PACKAGE_NAME "coolprop")
-    set(CPACK_DEBIAN_PACKAGE_VERSION "5.0") 
-    set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "i386") 
-#    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libdl")
-    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Jorrit Wronski <jowr@mek.dtu.dk>") #required
-
-    set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "Fluid properties for the masses
- CoolProp is a C++ library that implements 
-  - Pure and pseudo-pure fluid equations of state and transport properties for over 100 components
-  - Mixture properties using high-accuracy Helmholtz energy formulations (or cubic EOS)
-  - Correlations of properties for approximately 100 incompressible fluids and brines
-  - Highest accuracy psychrometric routines")
-
-    set(CPACK_DEBIAN_PACKAGE_SECTION "science")
-    set(DEBIAN_PACKAGE_BUILDS_DEPENDS "debhelper (>> 5.0.0)")
-    set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "debian.src/postinst;")
- 
-    include(CPack)
 endif()
 
 if (COOLPROP_32BIT_SHARED_LIBRARY_LINUX_MODULE OR COOLPROP_32BIT_SHARED_LIBRARY_LINUX)
@@ -794,3 +774,151 @@ endif()
 #include_directories("${CMAKE_CURRENT_SOURCE_DIR}/CoolProp")
 #FILE(GLOB coolprop_files "${CMAKE_CURRENT_SOURCE_DIR}/CoolProp/*.cpp")
 #add_library(coolprop STATIC ${coolprop_files})
+
+
+
+#######################################
+#          PACKAGING COOLPROP         #
+#-------------------------------------#
+# We are going to use CPack to create #
+# installers and binaries for         #
+# different platforms.                #
+# Some of the artifacts defined below #
+# have common code. This section is   #
+# an effort to reduce the amount of   #
+# duplicate cmake settings.           #
+#######################################
+
+
+
+#INCLUDE(InstallRequiredSystemLibraries)
+
+set(CPACK_PACKAGE_NAME ${app_name})
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "CoolProp - Fluid properties for the masses")
+SET(CPACK_PACKAGE_VENDOR "The CoolProp developers")
+SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/Readme.txt")
+SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+SET(CPACK_PACKAGE_VERSION_MAJOR ${COOLPROP_VERSION_MAJOR})
+SET(CPACK_PACKAGE_VERSION_MINOR ${COOLPROP_VERSION_MINOR})
+SET(CPACK_PACKAGE_VERSION_PATCH ${COOLPROP_VERSION_PATCH})
+SET(CPACK_PACKAGE_VERSION "${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
+SET(CPACK_PACKAGE_INSTALL_DIRECTORY "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}")
+# IF(WIN32 AND NOT UNIX)
+#   # There is a bug in NSI that does not handle full unix paths properly. Make
+#   # sure there is at least one set of four (4) backlasshes.
+#   SET(CPACK_PACKAGE_ICON "${CMake_SOURCE_DIR}/Utilities/Release\\\\InstallIcon.bmp")
+#   SET(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\MyExecutable.exe")
+#   SET(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} My Famous Project")
+#   SET(CPACK_NSIS_HELP_LINK "http:\\\\\\\\www.my-project-home-page.org")
+#   SET(CPACK_NSIS_URL_INFO_ABOUT "http:\\\\\\\\www.my-personal-home-page.com")
+#   SET(CPACK_NSIS_CONTACT "me@my-personal-home-page.com")
+#   SET(CPACK_NSIS_MODIFY_PATH ON)
+# ELSE(WIN32 AND NOT UNIX)
+#   SET(CPACK_STRIP_FILES "bin/MyExecutable")
+#   SET(CPACK_SOURCE_STRIP_FILES "")
+# ENDIF(WIN32 AND NOT UNIX)
+# SET(CPACK_PACKAGE_EXECUTABLES "MyExecutable" "My Executable")
+# 
+# # All packages include the shared library and the header
+# list(APPEND APP_SOURCES ${COOLPROP_LIBRARY_SOURCE})
+# add_library(${app_name} SHARED ${APP_SOURCES})
+# set_target_properties (${app_name} PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS} -DCOOLPROP_LIB")
+# 
+# install(TARGETS ${app_name} 
+#   ARCHIVE
+#   DESTINATION lib
+#   COMPONENT libraries)
+# install(FILES ${COOLPROP_LIBRARY_HEADER}
+#   DESTINATION include
+#   COMPONENT headers)
+#   
+# # Tell CPack all of the components to install. The "ALL"
+# # refers to the fact that this is the set of components that
+# # will be included when CPack is instructed to put everything
+# # into the binary installer (the default behavior).
+# set(CPACK_COMPONENTS_ALL libraries headers)
+# 
+# # Set the displayed names for each of the components to install.
+# # These will be displayed in the list of components inside the installer.
+# set(CPACK_COMPONENT_LIBRARIES_DISPLAY_NAME "Libraries")
+# set(CPACK_COMPONENT_HEADERS_DISPLAY_NAME "C++ Headers")
+# 
+# # Provide descriptions for each of the components to install.
+# # When the user hovers the mouse over the name of a component, 
+# # the description will be shown in the "Description" box in the
+# # installer. If no descriptions are provided, the "Description" 
+# # box will be removed.
+# set(CPACK_COMPONENT_LIBRARIES_DESCRIPTION
+#   "Dynamic library used to build programs with CoolProp")
+# set(CPACK_COMPONENT_HEADERS_DESCRIPTION
+#   "C/C++ header files for use with CoolProp")
+# 
+# # # Put the components into two different groups: "Runtime" and "Development"
+# # set(CPACK_COMPONENT_APPLICATIONS_GROUP "Runtime")
+# # set(CPACK_COMPONENT_LIBRARIES_GROUP "Development")
+# # set(CPACK_COMPONENT_HEADERS_GROUP "Development")
+# # 
+# # # Expand the "Development" group by default, since we have so few components.
+# # # Also, provide this group with a description.
+# # set(CPACK_COMPONENT_GROUP_DEVELOPMENT_EXPANDED ON)
+# # set(CPACK_COMPONENT_GROUP_DEVELOPMENT_DESCRIPTION
+# #   "All of the tools you'll ever need to develop software")
+# # 
+# # # It doesn't make sense to install the headers without the libraries
+# # # (because you could never use the headers!), so make the headers component
+# # # depend on the libraries component.
+# # set(CPACK_COMPONENT_HEADERS_DEPENDS libraries)
+# # 
+# # # Create two installation types with pre-selected components.
+# # # The "Developer" installation has just the library and headers,
+# # # while the "Full" installation has everything.
+# # set(CPACK_ALL_INSTALL_TYPES Full Developer)
+# # set(CPACK_INSTALL_TYPE_FULL_DISPLAY_NAME "Everything")
+# # set(CPACK_COMPONENT_LIBRARIES_INSTALL_TYPES Developer Full)
+# # set(CPACK_COMPONENT_HEADERS_INSTALL_TYPES Developer Full)
+# # set(CPACK_COMPONENT_APPLICATIONS_INSTALL_TYPES Full)
+# # 
+# # # Include CPack to introduce the appropriate targets
+# # include(CPack)
+
+
+
+if (COOLPROP_ZIP_PACKAGE)
+  ### source package settings
+  SET(CPACK_SOURCE_GENERATOR "ZIP")
+  SET(CPACK_SOURCE_IGNORE_FILES "~$;[.]swp$;/[.]svn/;/[.]git/;.gitignore;/build/;tags;cscope.*")
+  set(CPACK_SOURCE_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}")
+  list(APPEND CPACK_GENERATOR ZIP)
+endif (COOLPROP_ZIP_PACKAGE)
+
+if (COOLPROP_DEBIAN_PACKAGE)
+    if(!UNIX)
+      message(FATAL_ERROR "COOLPROP_DEBIAN_PACKAGE can only be used on linux host")
+    endif(!UNIX)
+    list(APPEND APP_SOURCES ${COOLPROP_LIBRARY_SOURCE})
+    add_library(${app_name} SHARED ${APP_SOURCES})
+    set_target_properties (${app_name} PROPERTIES COMPILE_FLAGS "${COMPILE_FLAGS} -DCOOLPROP_LIB")
+    set_target_properties (${app_name} PROPERTIES VERSION ${COOLPROP_VERSION} SOVERSION ${COOLPROP_VERSION_MAJOR})
+    add_dependencies (${app_name} generate_headers)
+    install (TARGETS ${app_name} DESTINATION "lib")
+    install (FILES ${COOLPROP_LIBRARY_HEADER} DESTINATION "include")
+
+    
+    set(CPACK_GENERATOR "DEB")
+
+    set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "i386") 
+#    set(CPACK_DEBIAN_PACKAGE_DEPENDS "libdl")
+    set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Jorrit Wronski <jowr@mek.dtu.dk>") #required
+
+    set(CPACK_DEBIAN_PACKAGE_SECTION "science")
+    set(DEBIAN_PACKAGE_BUILDS_DEPENDS "debhelper (>> 5.0.0)")
+    set(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA "dev/packages/DEB/postinst")
+  list(APPEND CPACK_GENERATOR DEB)
+endif()
+
+
+
+
+INCLUDE(CPack)
+
+
